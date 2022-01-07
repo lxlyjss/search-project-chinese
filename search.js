@@ -121,6 +121,7 @@ var createFile = {
   },
   getExcelData: function (files) {
     let data = []; // 其实最后就是把这个数组写入excel
+    let lines = []; // 保存所有行数进行去重。
     let title = ["页面", "行数", "中文", "英文"]; //这是第一行 俗称列名
     data.push(title); // 添加完列名 下面就是添加真正的内容了
     files.forEach((element) => {
@@ -148,16 +149,21 @@ var createFile = {
               /[\u4e00-\u9fa5\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b"',\d]/g
             );
             line = line.join("");
-            const hasPath = paths.some((p) => p === element.path);
-            if (!hasPath) {
-              arrInner.push(element.path);
-              paths.push(element.path);
-            } else {
-              arrInner.push("");
+            let regLine = line.match(/[\u4e00-\u9fa5]/g).join('');
+            // 如果已经包含相同文本，则不添加
+            if (!lines.includes(regLine)) {
+              const hasPath = paths.some((p) => p === element.path);
+              if (!hasPath) {
+                arrInner.push(element.path);
+                paths.push(element.path);
+              } else {
+                arrInner.push("");
+              }
+              arrInner.push(key + 1);
+              arrInner.push(line);
+              data.push(arrInner);
+              lines.push(regLine);
             }
-            arrInner.push(key + 1);
-            arrInner.push(line);
-            data.push(arrInner);
           }
         }
       });
@@ -167,6 +173,8 @@ var createFile = {
   },
   consolidateText: function (files) {
     var fileText = "";
+    // 保存所有行数，用于去重
+    var lines = [];
     files.forEach((item) => {
       var lineText = "\r\n";
       var ignoreFlag = false;
@@ -191,8 +199,12 @@ var createFile = {
               /[\u4e00-\u9fa5\u3002\uff1b\uff0c\uff1a\u201c\u201d\uff08\uff09\u3001\uff1f\u300a\u300b"',\d]/g
             );
             line = line.join("");
-            lineText += "Line:" + (key + 1) + " " + line + "\r\n";
-            hasChinese = true;
+            var regLine = line.match(/[\u4e00-\u9fa5]/g).join('');
+            if (!lines.includes(regLine)) {
+              lineText += "Line:" + (key + 1) + " " + line + "\r\n";
+              lines.push(regLine);
+              hasChinese = true;
+            }
           }
         }
       });

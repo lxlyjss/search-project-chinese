@@ -2,7 +2,7 @@ const fs = require("fs");
 const xlsx = require("node-xlsx");
 const chalk = require('chalk');
 const path = require("path");
-const config = require("./config");
+const config = require("./config_local");
 
 var readFile = {
   fileList: config.files,
